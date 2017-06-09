@@ -29,6 +29,8 @@ function splitJSON() {
                     }
                 }
                 dataObject = {nodes:stixObjects, links:stixRelationships};
+
+                console.log(JSON.stringify(dataObject));
                 console.log("There are " +countNodes+" STIX objects and " +countLinks+ " relationships in the collection");
 
             })
