@@ -54,7 +54,7 @@
         .attr("width", width)
         .attr("height", height);
 
-    d3.json("test.json", function (error, graph) {
+    d3.json("test2.json", function (error, graph) {
         cola
             .nodes(graph.nodes)
             .links(graph.links)
@@ -93,7 +93,7 @@
             .call(cola.drag);
 
         node.append("title")
-            .text(function (d) { return d.id; });
+            .text(function (d) { return d.description; });
 
 
         cola.on("tick", function () {
