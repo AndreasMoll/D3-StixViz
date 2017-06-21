@@ -22,26 +22,47 @@
 .label {
     fill: black;
     font-family: Verdana;
-    font-size: 10px;
+    font-size: 13px;
     text-anchor: center;
     cursor: move;
 }
-.label2{
+.label2 {
     fill: black;
     font-family: Verdana;
-    font-size: 7px;
+    font-size: 9px;
     text-anchor: center;
     cursor: move;
-        }
+}
+
 
 </style>
 </head>
 <body>
+<form>
+    <h4>Select the campaigns to draw:</h4>
+    <fieldset>
+
+                <label>
+                    <input type="checkbox" id="checkbox1" name="" value="">
+                    <span id="text1"></span>
+                </label>
+
+                <label>
+                    <input type="checkbox" id="checkbox2" name="" value="">
+                    <span id="text2"></span>
+                </label>
+
+                <label>
+                    <input type="checkbox" id="checkbox3" name="" value="">
+                    <span id="text3"></span>
+                </label>
+    </fieldset>
+</form>
 <script src=d3v4.js></script>
 <script src=cola.min.js></script>
 <script>
-    var width = 960,
-        height = 540;
+    var width = 1920,
+        height = 1080;
 
     var color = d3.scaleOrdinal(d3.schemeCategory20);
 
@@ -55,6 +76,9 @@
         .attr("height", height);
 
     d3.json("test2.json", function (error, graph) {
+
+        setCheckboxes(graph);
+        //graph = getUpdate();
         cola
             .nodes(graph.nodes)
             .links(graph.links)
@@ -69,11 +93,13 @@
             .data(graph.nodes)
           .enter().append("rect")
             .attr("class", "node")
-            .attr("width", 80)
-            .attr("height", 20)
+            .attr("width", 120)
+            .attr("height", 25)
             .attr("rx", 2)
             .attr("ry", 2)
-            .style("fill", "lavender" )
+            .style("fill", function (d) {
+                return getColor(d.type);
+            } )
             .call(cola.drag);
 
 			
@@ -89,11 +115,11 @@
             .data(graph.nodes)
             .enter().append("text")
             .attr("class", "label2")
-            .text(function (d) { return d.name;  })
+            .text(function (d) { return d.name.substring(0, 13);  })
             .call(cola.drag);
 
         node.append("title")
-            .text(function (d) { return d.description; });
+            .text(function (d) { return "Name: "+d.name+"\n"+"Description: "+d.description; });
 
 
         cola.on("tick", function () {
@@ -113,11 +139,44 @@
             label2.attr("x", function (d) { return d.x; })
                 .attr("y", function (d) {
                     var h = this.getBBox().height;
-                    return d.y + h/4;
+                    return d.y + h/4 + 4;
                 });
 
         });
     });
+    function getColor(type) {
+        switch (type) {
+            case "malware" : return "red";
+            case "campaign" : return "lavender";
+            case "vulnerability" : return "sandybrown";
+            case "course-of-action" : return "palegreen";
+            case "attack-pattern" : return "dodgerblue";
+            case "indicator" : return "yellow";
+            case "identity" : return "silver";
+            case "threat-actor" : return "red";
+            case "report" : return "sienna";
+            default : "lavender";
+        }
+    }
+
+    function setCheckboxes(data) {
+        var campaigns = [];
+        for(var i = 0; i <data.nodes.length; i++){
+            if(data.nodes[i].type == "campaign"){
+                campaigns.push(data.nodes[i].name);
+            }
+        }
+        document.getElementById("text1").innerHTML = campaigns[0];
+        document.getElementById("text2").innerHTML = campaigns[1];
+        document.getElementById("text3").innerHTML = campaigns[2];
+        document.getElementById("checkbox1").value = campaigns[0];
+        document.getElementById("checkbox2").value = campaigns[1];
+        document.getElementById("checkbox3").value = campaigns[2];
+    }
+
+    function handleCheckbox() {
+        
+    }
 </script>
    
 
