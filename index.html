@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Non-overlapping Layout</title>
+    <title>Stix 2 Graph</title>
     <style>
 
 .node {
@@ -43,19 +43,20 @@
     <fieldset>
 
                 <label>
-                    <input type="checkbox" id="checkbox1" name="" value="">
+                    <input type="checkbox" id="checkbox1" value="0">
                     <span id="text1"></span>
                 </label>
 
                 <label>
-                    <input type="checkbox" id="checkbox2" name="" value="">
+                    <input type="checkbox" id="checkbox2" value="0">
                     <span id="text2"></span>
                 </label>
 
                 <label>
-                    <input type="checkbox" id="checkbox3" name="" value="">
+                    <input type="checkbox" id="checkbox3" value="0">
                     <span id="text3"></span>
                 </label>
+                <input type="button" id="btnDraw" value="Submit" onclick="submitChoice()">
     </fieldset>
 </form>
 <script src=d3v4.js></script>
@@ -67,7 +68,7 @@
     var color = d3.scaleOrdinal(d3.schemeCategory20);
 
     var cola = cola.d3adaptor(d3)
-        .linkDistance(100)
+        .linkDistance(150)
         .avoidOverlaps(true)
         .size([width, height]);
 
@@ -78,7 +79,12 @@
     d3.json("test2.json", function (error, graph) {
 
         setCheckboxes(graph);
-        //graph = getUpdate();
+
+            var campaignsToRemove = [2, 3];
+            graph = filterCampaigns(graph, campaignsToRemove);
+
+
+
         cola
             .nodes(graph.nodes)
             .links(graph.links)
@@ -93,7 +99,7 @@
             .data(graph.nodes)
           .enter().append("rect")
             .attr("class", "node")
-            .attr("width", 120)
+            .attr("width", 100)
             .attr("height", 25)
             .attr("rx", 2)
             .attr("ry", 2)
@@ -160,22 +166,78 @@
     }
 
     function setCheckboxes(data) {
-        var campaigns = [];
+
+        var checkboxCounter = 1;
         for(var i = 0; i <data.nodes.length; i++){
             if(data.nodes[i].type == "campaign"){
-                campaigns.push(data.nodes[i].name);
+                document.getElementById(("text"+checkboxCounter+"")).innerHTML = data.nodes[i].name;
+                document.getElementById(("checkbox"+checkboxCounter+"")).value = i;
+                checkboxCounter++;
             }
         }
-        document.getElementById("text1").innerHTML = campaigns[0];
-        document.getElementById("text2").innerHTML = campaigns[1];
-        document.getElementById("text3").innerHTML = campaigns[2];
-        document.getElementById("checkbox1").value = campaigns[0];
-        document.getElementById("checkbox2").value = campaigns[1];
-        document.getElementById("checkbox3").value = campaigns[2];
+
     }
 
-    function handleCheckbox() {
-        
+    var linksToRemove = [];
+    var runCounter = 0;
+
+    function filterCampaigns(data, nodesToRemove) {
+
+        for(var i = 0; i < data.links.length; i++){
+            for(var j = 0; j < nodesToRemove.length; j++){
+                if((data.links[i].source == nodesToRemove[j]) || (data.links[i].target == nodesToRemove[j])){
+                    nodesToRemove.push(data.links[i].source);
+                    nodesToRemove.push(data.links[i].target);
+                    nodesToRemove = nodesToRemove.filter(function (item, i, ar) { return ar.indexOf(item) === i; });
+                    linksToRemove.push(data.links[i]);
+                    linksToRemove = linksToRemove.filter((function (item, i, ar) { return ar.indexOf(item) === i; }))
+                }
+
+            }
+
+        }
+        runCounter++;
+        if(runCounter < 3){
+            filterCampaigns(data, nodesToRemove);
+        }
+        else{
+            nodesToRemove.sort(function (a, b) { return a-b; });
+            for(var i = nodesToRemove.length -1; i>=0; i--){
+                data.nodes.splice(nodesToRemove[i], 1);
+            }
+            for(var i = 0; i < linksToRemove.length; i++){
+                for(var j = 0; j < data.links.length; j++){
+                    if(linksToRemove[i].id == data.links[j].id){
+                        data.links.splice(j, 1);
+                    }
+                }
+            }
+        }
+        data = recalculateIndexes(data);
+        return data;
+    }
+
+    function recalculateIndexes(data) {
+        for(var i = 0; i < data.links.length; i++){
+            var index;
+
+            var sourceId = data.links[i].source_ref;
+            index = getIndex(data, sourceId);
+            data.links[i].source = index;
+
+            var targetId = data.links[i].target_ref;
+            index = getIndex(data, targetId);
+            data.links[i].target = index;
+        }
+        return data;
+    }
+
+    function getIndex(data, id) {
+        for(var i = 0; i < data.nodes.length; i++){
+            if(data.nodes[i].id ==  id){
+                return i;
+            }
+        }
     }
 </script>
    
